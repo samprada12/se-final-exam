@@ -17,7 +17,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -229,5 +228,54 @@ public class PetStoreTest {
         String output = out.toString();
         assertFalse(output.isEmpty());
         assertTrue(output.contains("Dog") || output.contains("Cat"));
+    }
+
+    // ---------------------------------------------------------
+    // REQUIRED EXTRA COVERAGE TESTS FOR 100%
+    // ---------------------------------------------------------
+
+    @Test
+    @DisplayName("Negative ID Sale Throws Duplicate Exception (PetStore behavior)")
+    public void negativeIdSaleTest() {
+        Dog invalidDog = new Dog(AnimalType.DOMESTIC, Skin.FUR, Gender.MALE, Breed.POODLE,
+                new BigDecimal("10.00"), -1);
+
+        Exception ex = assertThrows(DuplicatePetStoreRecordException.class, () -> {
+            petStore.soldPetItem(invalidDog);
+        });
+
+        assertTrue(ex.getMessage().contains("Duplicate"));
+    }
+
+    @Test
+    @DisplayName("Wrong Type Same ID — Store Does Nothing (No Exception)")
+    public void wrongTypeDuplicateTest() {
+        // init() has a Cat with ID = 2
+        Dog fakeDog = new Dog(AnimalType.DOMESTIC, Skin.FUR, Gender.MALE, Breed.UNKNOWN,
+                new BigDecimal("20.00"), 2);
+
+        // PetStore throws NO exception for wrong-type conflicts
+        assertDoesNotThrow(() -> petStore.soldPetItem(fakeDog));
+    }
+
+    @Test
+    @DisplayName("Print Inventory Includes Snake Test")
+    public void printInventoryIncludesSnakeTest() {
+        petStore.addPetInventoryItem(
+                new Snake(AnimalType.DOMESTIC, Skin.SCALES, Gender.FEMALE, Breed.UNKNOWN,
+                        new BigDecimal("25.00"), 999));
+
+        java.io.PrintStream originalOut = System.out;
+        java.io.ByteArrayOutputStream out = new java.io.ByteArrayOutputStream();
+        System.setOut(new java.io.PrintStream(out));
+
+        try {
+            petStore.printInventory();
+        } finally {
+            System.setOut(originalOut);
+        }
+
+        String output = out.toString();
+        assertTrue(output.contains("Snake"));
     }
 }
